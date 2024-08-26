@@ -65,17 +65,19 @@ def register(request):
 
     # 檔案上傳
     uploaded_file = request.FILES.get('avator')
-    file_name = ''
+    file_name = '無上傳檔案'
     if uploaded_file:
         fs = FileSystemStorage()
         file_name = fs.save(uploaded_file.name, uploaded_file)
 
     content = f'''您好，
     您的註冊資訊如下：
-    姓名：{name} /n
-    電子信箱: {email} /n
-    年紀：{age} /n
+    姓名：{name} \n
+    電子信箱: {email} \n
+    年紀：{age} \n
     上傳:{file_name}'''
+
+    content = content.replace('\n', '<br>')
 
     Member.objects.create(
         user_name=name,
