@@ -1,0 +1,71 @@
+{% extends 'main_cotainer.html' %} {% load static %} 
+{% block styles %}
+<style>
+  .card-img-top {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+  .card-title {
+    font-size: medium;
+    font-weight: bolder;
+  }
+</style>
+{% endblock %} 
+{% block maincontent %}
+<div class="row row-cols-1 row-cols-md-3 g-4" id="travel_cards">
+  <div class="col">
+    <div class="card">
+      <img src="..." class="card-img-top" alt="..." />
+      <div class="card-body">
+        <h5 class="card-title">Card title</h5>
+        <p class="card-text">
+          This is a longer card with supporting text below as a natural lead-in
+          to additional content. This content is a little bit longer.
+        </p>
+      </div>
+      <div class="card-footer">
+        <small class="text-body-secondary">Last updated 3 mins ago</small>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
+{% block scripts %}
+<script src="{% static 'scripts/travel.js' %}"></script>
+<script>
+
+  const cardContainer = document.querySelector("#travel_cards");
+
+  const traveldata = spots.CommonFormat.Section.map((sectionItem) => {
+    const { stitle, xbody, address, file } = sectionItem;
+
+    if (file.img.length > 0) {
+      url = file.img[0].text;
+    } else {
+      url = "...";
+    }
+    console.log(url);
+
+    if (xbody.length > 50) {
+      sliceXbody = xbody.slice(0, 50) + "...";
+    }
+    return `    
+          <div class="col">
+            <div class="card">
+              <img src="${url}" class="card-img-top" alt="..." />
+              <div class="card-body">
+                <h5 class="card-title">${stitle}</h5>
+                <p class="card-text">${sliceXbody}</p>
+              </div>
+              <div class="card-footer">
+                <small class="text-body-secondary">${address}</small>
+              </div>
+            </div>
+          </div>
+        `;
+  });
+
+  cardContainer.innerHTML = traveldata.join("");
+</script>
+{% endblock %}

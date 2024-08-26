@@ -1,0 +1,172 @@
+{% extends 'Base.html' %}
+{% block styles %}
+<style>
+    .hidden {
+        display: none;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid d-flex justify-content-center align-items-center" style="min-height: 90vh;">
+  <div class="row w-100 justify-content-center">
+      <div class="col-12 col-md-6 col-lg-4">
+<form id="userForm">
+    <div class="mb-3">
+        <label for="InputName" class="form-label">姓名</label>
+        <input type="text" class="form-label" id="InputName" name="name"/>
+        <div id="alert_checkacc" class="text-success"></div>
+    </div>
+    
+    <div class="mb-3">
+        <label for="InputEmail" class="form-label">電子郵件</label>
+        <input type="email" class="form-control" id="InputEmail" name="email" >
+        <div id="alert_checkemail" class="text-success"></div>    
+    </div>
+
+    <div class="mb-3">
+        <label for="InputPassword" class="form-label">密碼</label>
+        <input type="password" name="password" class="form-control" id="InputPassword">
+    </div>
+
+    <div class="mb-3">
+        <label for="InputPassword" class="form-label">密碼確認</label>
+        <input type="password" name="passwordConfirm" class="form-control" id="InputPasswordConfirm">
+        <div id="alert_checkpassword" class="text-success"></div>
+    </div>
+
+    
+    <div class="mb-3">
+        <label for="InputAge" class="form-label">年紀</label>
+        <input type="number" class="form-control" id="InputAge" name="age">
+    </div>
+    
+    <div class="mb-3">
+        <label for="formFile" class="form-label">頭像</label>
+        <input class="form-control" type="file" id="formFile" name="avator">
+    </div>
+
+    <button type="submit" class="btn btn-primary" id="buttonSubmit">註冊</button>
+</form>
+    <div id="div_register_result" class="alert alert-info mt-3 hidden"></div>
+  </div>
+</div>
+</div>
+{% endblock %} 
+{% block scripts %}
+<script>
+   const buttonSubmit = document.querySelector('#buttonSubmit')
+
+   const inpName = document.querySelector('#InputName')
+   const inpEmail = document.querySelector('#InputEmail')
+   const inpAge = document.querySelector('#InputAge')
+
+   const alert_checkacc_div2 = document.querySelector("#alert_checkacc_div2");
+   const alert_checkacc = document.querySelector("#alert_checkacc");
+
+  let isUsernameChecking = false;
+  let isEmailChecking = false;
+   
+   // 檢查姓名(帳號)是否存在
+  inpName.addEventListener("blur", async (event) => {
+    if (isUsernameChecking) return; // 避免多次發出檢查請求
+    isUsernameChecking = true;
+
+    event.preventDefault();
+    const url = `/api/check/?name=${inpName.value}`;
+    const response = await fetch(url);
+    const data = await response.json(); //await response.text();
+    
+    // 依據檢查結果的狀態改變樣式
+    if (data.success) {
+        alert_checkacc.className = "text-success bg-light";
+    } else {
+        alert_checkacc.className = "text-danger bg-light";
+    }
+
+    //alert_checkacc_div2.innerHTML = data;
+    alert_checkacc.innerHTML = data.message;
+    isUsernameChecking = false;
+  });
+
+  // 檢查電子郵件格式 
+  const alert_checkemail = document.querySelector("#alert_checkemail");
+  inpEmail.addEventListener("blur", async (event) => { 
+    if (isEmailChecking) return; // 避免多次發出檢查請求
+    
+    event.preventDefault();
+    const re = /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z]+$/;
+    
+    if (!re.test(inpEmail.value)) {
+      alert_checkemail.className = "text-danger bg-light";
+      alert_checkemail.innerHTML = "電子郵件格式錯誤";
+      inpEmail.value = "";
+    }
+    else
+    {
+      // 檢查信箱是否已註冊
+      const checkEmailUrl = `/api/checkemail/?email=${inpEmail.value}`;
+      const response = await fetch(checkEmailUrl);
+      const data = await response.json();
+
+      if (data.success) {
+          alert_checkemail.className = "text-success bg-light";
+      }
+      else
+      {
+          alert_checkemail.className = "text-danger bg-light";
+      }
+      alert_checkemail.innerHTML = data.message;
+    } 
+    
+    isEmailChecking = false;
+  });
+
+  // 檢查密碼
+  const inpPassword = document.querySelector("#InputPassword");
+  const inpPasswordConfirm = document.querySelector("#InputPasswordConfirm");
+  const alert_checkpassword = document.querySelector("#alert_checkpassword");
+  
+  //   檢查密碼是否一致
+  inpPasswordConfirm.addEventListener("blur", (event) => {
+    if (inpPassword.value !== inpPasswordConfirm.value) {
+      alert_checkpassword.className = "text-danger bg-light";
+      alert_checkpassword.innerHTML = "密碼不一致";
+      inpPasswordConfirm.value = "";
+    }
+    else
+    {
+      alert_checkpassword.className = "text-success";
+      alert_checkpassword.innerHTML = "";
+    }
+  });
+
+  // 註冊提交
+  const divInfo = document.querySelector('#div_register_result')
+
+  buttonSubmit.addEventListener('click',async (event)=>{
+    event.preventDefault()
+    const myForm = document.querySelector('#userForm')
+    const formData = new FormData(myForm)
+
+    //透過fetch()將formData資料傳給API
+    const response = await fetch('/api/register/',{
+        method:'POST',
+        body:formData,
+        headers:{
+          'X-CSRFToken':'{{ csrf_token }}'
+        }
+    })
+
+    const data = await response.json();
+    
+    // 依據回傳的狀態改變樣式
+    if (data.success) {
+      divInfo.className = "alert alert-success mt-3"; // 成功變成綠色
+    } else {
+      divInfo.className = "alert alert-danger mt-3"; // 失敗變成紅色
+    }
+
+    divInfo.innerHTML = data.message;
+  })
+</script>
+{% endblock %}
